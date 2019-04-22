@@ -4,6 +4,8 @@ import requests
 import collections
 
 
+# WRITE Pytests for each case
+# Write Reset - Pytest fixture before running each test
 
 #def cal(a,b):
 #    return a + b
@@ -18,7 +20,25 @@ import collections
 #def test_cal(test_input, expected_output):
 #    result = cal()
 
+
 #------------------ GET /quotes --------------------#
+
+
+def postQuotes(number):
+    stored = 0
+    for i in range(number):
+        info = {"text": "I have a dream"}
+        postTheQuote = requests.post('http://127.0.0.1:6543/quotes', data=None, json=info)
+        if postTheQuote.ok == True:
+            stored = stored + 1
+    return stored
+
+def getTotalNumberOfQuotes():
+    request = requests.get('http://127.0.0.1:6543/quotes')
+    response = request.json()['data']
+    return len(response)
+
+
 
 req = requests.get('http://127.0.0.1:6543/quotes')
 
@@ -59,8 +79,12 @@ def hasDuplicates(seq):
 
     return result
 
-#print(isSorted(listId))
-#print(hasDuplicates(listId))
+#Posting 9 more quotes
+print('Quotes posted = ' + str(postQuotes(15)))
+#Total number of Quotes, currently
+print('Total number of Quotes = ' + str(getTotalNumberOfQuotes()))
+print('List is sorted = '+ str(isSorted(listId)))
+print('List has duplicate IDs = ' + str(hasDuplicates(listId)))
 
 
 #---------------POST /reset------------------#
@@ -77,48 +101,63 @@ req2 = requests.post('http://127.0.0.1:6543/reset', data=None, json=payload)
 # Accepts a new quote and assigns new ID
 payload = {"text": "I have a dream"}
 postQuote = requests.post('http://127.0.0.1:6543/quotes',data=None,json=payload)
-#print(postQuote.ok) #True
+print(postQuote.ok) #True
 #print(postQuote.text)
-#print(postQuote.json()['data']['id']) #The ID == 4 (asserted value)
+print(postQuote.json()['data']['id']) #The ID == 4 (asserted value)
 
 # Rejects missing text
 payload2 = {}
 rejectMissingField = requests.post('http://127.0.0.1:6543/quotes',data=None,json=payload2)
-#print(rejectMissingField.ok) #False
+print(rejectMissingField.ok) #False
 #print(rejectMissingField.text)
-#print(rejectMissingField.status_code) # HTTP code = 400
+print(rejectMissingField.status_code) # HTTP code = 400
 
 #Rejects integer values
 payload3 = {"text": 123}
 rejectInteger = requests.post('http://127.0.0.1:6543/quotes',data=None,json=payload3)
-#print(rejectInteger.ok) #False
+print(rejectInteger.ok) #False
 #print(rejectInteger.text)
-#print(rejectInteger.status_code) # HTTP code = 400
+print(rejectInteger.status_code) # HTTP code = 400
 
+
+
+'''
 #Stores 20 quotes
-for i in range(20):
+#Supports up to 16 POST requests BUT
+#Server can only support upto 15 + 3 = 18 Quotes in total
+#Test fail
+stored = 0
+for i in range(16):
     info = {"text": "I have a dream"}
     postTheQuote = requests.post('http://127.0.0.1:6543/quotes', data=None, json=info)
+    if postTheQuote.ok == True:
+        stored = stored + 1
 
-res = requests.get('http://127.0.0.1:6543/quotes')
-repondre = res.json()['data']
-size = len(repondre)
-#print(size) # size > 20
+#status = postTheQuote.ok
+#print(status)
+#print(type(status))
+print(stored)
+
+request = requests.get('http://127.0.0.1:6543/quotes')
+response = request.json()['data']
+print(len(response))
+'''
 
 # After adding quotes, should appear in GET /quotes
 payload40 = {"text": "I have a dream"}
 addQuote = requests.post('http://127.0.0.1:6543/quotes',data=None,json=payload40)
-newId = addQuote.json()['data']['id']
+newId = addQuote.json()['data']['id'] #ID == 4
 print(addQuote.ok) # True
 
 #should retrieve on Get /quotes/id
 returnNewQuote = requests.get('http://127.0.0.1:6543/quotes/'+str(newId))
-#print(returnNewQuote.ok) #True
+print(returnNewQuote.ok) #True
 
 #Should appear on Get /quotes
-newQuotes = requests.get('http://127.0.0.1:6543/quotes/')
+newQuotes = requests.get('http://127.0.0.1:6543/quotes')
 listNewQuotes = newQuotes.json()['data']
-yourQuote = listNewQuotes[newId-1]
+yourQuote = {"id": newId, "text": "I have a dream"}
+print(yourQuote == listNewQuotes[newId-1]) #Assert == True
 print(yourQuote) #{"id": newId, "text": "I have a dream"}
 
 
@@ -142,8 +181,6 @@ for i in range(1, (sizeQuotes+1)):
 #print(listIndiQuotes)
 #print(listAllQuotes)
 
-
-
 #Nonexistant ID
 invalidID = 5
 invalidResponse = requests.get('http://127.0.0.1:6543/quotes/'+str(invalidID))
@@ -158,8 +195,12 @@ deleted = requests.delete('http://127.0.0.1:6543/quotes/'+str(id))
 #print(deleted.text)
 
 #Check if it gives error on deleting the same thing twice or more times
-deleteTwice = requests.delete('http://127.0.0.1:6543/quotes/'+str(id))
-#print(deleteTwice.ok) #False
+failed = 0
+for i in range(5):
+    deleteAgain = requests.delete('http://127.0.0.1:6543/quotes/'+str(id))
+    if deleteAgain.ok == False:
+        failed = failed + 1
+print(failed)
 #print(deleteTwice.text) #No such resource
 #print(deleteTwice.status_code) #HTTP code = 404
 
@@ -170,4 +211,3 @@ response = requests.get('http://127.0.0.1:6543/quotes'+str(id))
 #Check if ID still exists in list of Quotes
 response = requests.get('http://127.0.0.1:6543/quotes')
 #print(original.text == response.text) #False
-
