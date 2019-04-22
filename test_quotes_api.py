@@ -86,17 +86,41 @@ payload2 = {}
 rejectMissingField = requests.post('http://127.0.0.1:6543/quotes',data=None,json=payload2)
 #print(rejectMissingField.ok) #False
 #print(rejectMissingField.text)
+#print(rejectMissingField.status_code) # HTTP code = 400
 
 #Rejects integer values
 payload3 = {"text": 123}
 rejectInteger = requests.post('http://127.0.0.1:6543/quotes',data=None,json=payload3)
 #print(rejectInteger.ok) #False
 #print(rejectInteger.text)
+#print(rejectInteger.status_code) # HTTP code = 400
 
 #Stores 20 quotes
 for i in range(20):
     info = {"text": "I have a dream"}
     postTheQuote = requests.post('http://127.0.0.1:6543/quotes', data=None, json=info)
+
+res = requests.get('http://127.0.0.1:6543/quotes')
+repondre = res.json()['data']
+size = len(repondre)
+#print(size) # size > 20
+
+# After adding quotes, should appear in GET /quotes
+payload40 = {"text": "I have a dream"}
+addQuote = requests.post('http://127.0.0.1:6543/quotes',data=None,json=payload40)
+newId = addQuote.json()['data']['id']
+print(addQuote.ok) # True
+
+#should retrieve on Get /quotes/id
+returnNewQuote = requests.get('http://127.0.0.1:6543/quotes/'+str(newId))
+#print(returnNewQuote.ok) #True
+
+#Should appear on Get /quotes
+newQuotes = requests.get('http://127.0.0.1:6543/quotes/')
+listNewQuotes = newQuotes.json()['data']
+yourQuote = listNewQuotes[newId-1]
+print(yourQuote) #{"id": newId, "text": "I have a dream"}
+
 
 #------------------GET /quotes/<id>---------------#
 inputId = 2
